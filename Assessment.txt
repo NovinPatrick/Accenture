@@ -1,0 +1,170 @@
+
+mysql> select * from employee;
++------+----------+------+-------+
+| eid  | ename    | esal | depid |
++------+----------+------+-------+
+|   10 | Vivek    | 2000 |     1 |
+|   20 | Raj      | 3000 |     1 |
+|   30 | Vinoth   | 4000 |     1 |
+|   40 | Abhishek | 5000 |     2 |
+|   50 | Divya    | 6000 |     2 |
+|   60 | Chitra   | 7000 |     3 |
++------+----------+------+-------+
+6 rows in set (0.04 sec)
+
+mysql> select * from department;
++--------+---------+
+| deptid | depname |
++--------+---------+
+|      1 | IT      |
+|      2 | Admin   |
+|      4 | HR      |
++--------+---------+
+3 rows in set (0.00 sec)
+
+1. Fetch all the Deptid,DeptName from department table & Corresponding Department salary using Employee  Table. If Any department is not available in employee table then assign salary as 0.
+=>mysql> select deptid,depname, case when sum(esal) is null then 0 else sum(esal) end as a from department left join employee on depid=deptid group by depname;
++--------+---------+-------+
+| deptid | depname | a     |
++--------+---------+-------+
+|      1 | IT      |  9000 |
+|      2 | Admin   | 11000 |
+|      4 | HR      |     0 |
++--------+---------+-------+
+3 rows in set (0.00 sec)
+
+
+2. Fetch all the Deptid &  aggregate all the salary for the respective dept id from Employee table & Corresponding Department name using department Table. If Any department is not available in department table then assign departname as 'Others'
+=>mysql> select depid,case when depname is null then 'Others' else depname end as depname,sum(esal) from employee left join department on depid=deptid group by depid;
++-------+---------+-----------+
+| depid | depname | sum(esal) |
++-------+---------+-----------+
+|     1 | IT      |      9000 |
+|     2 | Admin   |     11000 |
+|     3 | Others  |      7000 |
++-------+---------+-----------+
+3 rows in set (0.00 sec)
+
+3.Fetch all the Emp_id,Emp_name,Manager_ID and salary who is getting between 2700 and 10000
+=>mysql> select * from empl where sal>=2700 and sal<10000;
++------+----------+--------+------+
+| eid  | ename    | man_id | sal  |
++------+----------+--------+------+
+|    3 | Vinoth   |      1 | 3000 |
+|    4 | Abhishek |      2 | 5000 |
+|    5 | Divya    |      3 | 6000 |
+|    8 | Aarthi   |      4 | 2700 |
++------+----------+--------+------+
+4 rows in set (0.00 sec)
+
+
+4. Fetch all the Manager_ID,Manager_Name and Sum of the employee salary who is reporting to that manager
+=>mysql> select e1.eid,e1.ename,sum(e.sal) from empl e join empl e1 on e.man_id=e1.eid group by e1.ename order by e1.eid;
++------+----------+------------+
+| eid  | ename    | sum(e.sal) |
++------+----------+------------+
+|    1 | Vivek    |       5000 |
+|    2 | Raj      |       5000 |
+|    3 | Vinoth   |      10850 |
+|    4 | Abhishek |       2700 |
+|    8 | Aarthi   |      11000 |
++------+----------+------------+
+5 rows in set (0.00 sec)
+
+
+5. Fetch all the emp_id & derv_Emp_Name 
+*  Derv_emp_name will be from 4th character till end of the chanracter from emp_name
+=>mysql> select eid,substr(ename,4) from em ;
++------+-----------------+
+| eid  | substr(ename,4) |
++------+-----------------+
+|    1 | eshKumar        |
+|    2 | ayaRaja         |
+|    3 | ishek           |
+|    4 | eshKumar        |
+|    5 | ayaprakashSingh |
+|    6 | yashree         |
++------+-----------------+
+6 rows in set (0.03 sec)
+
+
+6. Fetch all the emp_id & derv_Emp_Name 
+*  Derv_emp_name will be from first occurance of 'h' till  end of the chanracter from emp_name
+Note: Don’t use regular expression
+=>mysql> select eid,substr(ename,instr(ename,'h')+1) from em ;
++------+----------------------------------+
+| eid  | substr(ename,instr(ename,'h')+1) |
++------+----------------------------------+
+|    1 | Kumar                            |
+|    2 | ayaRaja                          |
+|    3 | ishek                            |
+|    4 | Kumar                            |
+|    5 | Singh                            |
+|    6 | ree                              |
++------+----------------------------------+
+6 rows in set (0.01 sec)
+
+
+7.Fetch emp_id,Emp_name & Salary who is getting 2nd maximum salary
+mysql> select eid,ename,sal from (select eid,ename,sal,dense_rank() over(order by sal desc) as dno from empl)as t where dno=2;
++------+-------+------+
+| eid  | ename | sal  |
++------+-------+------+
+|    5 | Divya | 6000 |
++------+-------+------+
+1 row in set (0.00 sec)
+
+
+
+8.Fetch emp_id,Emp_name & Salary who is getting top 3 salary
+=>mysql> select eid,ename,sal from (select eid,ename,sal,dense_rank() over(order by sal desc) as dno from empl)as t where dno<=3;
++------+----------+-------+
+| eid  | ename    | sal   |
++------+----------+-------+
+|    1 | Vivek    | 11000 |
+|    5 | Divya    |  6000 |
+|    4 | Abhishek |  5000 |
++------+----------+-------+
+3 rows in set (0.00 sec)
+
+
+9. Fetch emp_id,Emp_name,Dept_name & Salary who is getting salary greater than 3000 int 'IT' and  salary greater than 3400 int 'Admin'
+=>mysql>select *  from empl where (dname='IT' and sal>3000) or (dname='Admin' and sal>3400);
++------+----------+--------+-------+-------+
+| eid  | ename    | man_id | sal   | dname |
++------+----------+--------+-------+-------+
+|    2 | Raj      |      2 |  3500 | Admin |
+|    1 | Abhishek |      8 |  5700 | IT    |
++------+----------+--------+-------+-------+
+2 rows in set (0.00 sec)
+
+
+10. Fetch emp_id,Emp_name,Dept_name & Salary who is having sring 'J' in emp_name
+
+select * from empl where ename like '%j%';
+
+11.
+ select * from empl where ename like '%i%' or ename like '%k%' or ename like '%h%';
++------+----------+--------+-------+-------+
+| eid  | ename    | man_id | sal   | dname |
++------+----------+--------+-------+-------+
+|    3 | Vinoth   |      1 |  3000 | HR    |
+|    4 | Abhishek |      2 |  5000 | IT    |
+|    5 | Divya    |      3 |  6000 | ITES  |
+|    6 | Chitra   |      3 |  2350 | HR    |
+|    7 | Devi     |      3 |  2500 | Admin |
+|    8 | Aarthi   |      4 |  2700 | ITES  |
+|    1 | Vivek    |      8 | 11000 | IT    |
++------+----------+--------+-------+-------+
+7 rows in set (0.00 sec)
+
+12.
+
+mysql> select * from empl where ename like '%i%' and ename like '%k%' and ename like '%h%';
++------+----------+--------+------+-------+
+| eid  | ename    | man_id | sal  | dname |
++------+----------+--------+------+-------+
+|    4 | Abhishek |      2 | 5000 | IT    |
++------+----------+--------+------+-------+
+1 row in set (0.00 sec)
+
