@@ -167,4 +167,4 @@ mysql> select * from empl where ename like '%i%' and ename like '%k%' and ename 
 |    4 | Abhishek |      2 | 5000 | IT    |
 +------+----------+--------+------+-------+
 1 row in set (0.00 sec)
-
+ 

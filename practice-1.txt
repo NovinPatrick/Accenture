@@ -1,0 +1,452 @@
+insert into author values('AUT001','WILLIAM NORTON','UK','CAMBRIDGE','PB01');
+insert into author values('AUT002','C. J. WILDE','USA','SAN FRANSICO','PB04');
+insert into author values('AUT003','JOHN BETJEMAN HUNTER','RUSSIA','MOSCOW','PB01');
+insert into author values('AUT004','JOHN BETJEMAN HUNTER','CANADA','TORONTO','PB03');
+insert into author values('AUT005','S.B.SWAMINATHAN','INDIA','DELHI','PB01');
+insert into author values('AUT006','BUTLER ANDRE','UK','LONDON','PB03');
+insert into author values('AUT007','E. HOWARD','EUROPE','BERLIN','PB03');
+insert into author values('AUT008','ANDREW JEFF','GERMANY','BERLIN','PB02');
+insert into author values('AUT009','DREK TAILOR','AUSTRALIA','MELBOURNE','PB01');
+insert into author values('AUT010','MARY COFFING','USA','NEW JERSEY','PB04');
+
+
+insert into publish values('PB01','JEX MAX PUBLICATION','BERLIN',STR_TO_DATE('4/21/1929','%m/%d/%Y'),10);
+insert into publish values('PB02','SUMMER NIGHT PUBLICATION','CANADA',STR_TO_DATE('8/31/2019','%m/%d/%Y'),25);
+insert into publish values('PB03','NOVEL PUBLISHER LTD','LONDON',STR_TO_DATE('8/10/2018','%m/%d/%Y'),11);
+insert into publish values('PB04','MARK BOOK SALES','NEW JERSEY',STR_TO_DATE('5/24/2008','%m/%d/%Y'),9);
+
+
+
+mysql> SELECT * FROM AUTHOR;
++-----------+----------------------+----------------+--------------+------------+
+| author_id | author_name          | author_country | author_city  | publish_id |
++-----------+----------------------+----------------+--------------+------------+
+| AUT001    | WILLIAM NORTON       | UK             | CAMBRIDGE    | PB01       |
+| AUT002    | C. J. WILDE          | USA            | SAN FRANSICO | PB04       |
+| AUT003    | JOHN BETJEMAN HUNTER | RUSSIA         | MOSCOW       | PB01       |
+| AUT004    | JOHN BETJEMAN HUNTER | CANADA         | TORONTO      | PB03       |
+| AUT005    | S.B.SWAMINATHAN      | INDIA          | DELHI        | PB01       |
+| AUT006    | BUTLER ANDRE         | UK             | LONDON       | PB03       |
+| AUT007    | E. HOWARD            | EUROPE         | BERLIN       | PB03       |
+| AUT008    | ANDREW JEFF          | GERMANY        | BERLIN       | PB02       |
+| AUT009    | DREK TAILOR          | AUSTRALIA      | MELBOURNE    | PB01       |
+| AUT010    | MARY COFFING         | USA            | NEW JERSEY   | PB04       |
++-----------+----------------------+----------------+--------------+------------+
+10 rows in set (0.00 sec)
+
+mysql> SELECT * FROM PUBLISH;
++------------+--------------------------+--------------+--------------------+----------+
+| publish_id | publish_name             | publish_city | publish_start_date | branches |
++------------+--------------------------+--------------+--------------------+----------+
+| PB01       | JEX MAX PUBLICATION      | BERLIN       | 1929-04-21         |       10 |
+| PB02       | SUMMER NIGHT PUBLICATION | CANADA       | 2019-08-31         |       25 |
+| PB03       | NOVEL PUBLISHER LTD      | LONDON       | 2018-08-10         |       11 |
+| PB04       | MARK BOOK SALES          | NEW JERSEY   | 2008-05-24         |        9 |
++------------+--------------------------+--------------+--------------------+----------+
+4 rows in set (0.00 sec)
+
+
+================================================================================================
+
+
+1. Fetch publisher information who have publish_city <> author_city and check if publish_city = author_country . display the correct publisher_city along with other publisher information based on author_city
+2. Fetch authors_name, author_country, publish_city, publish_start_date, branches who have publications with most number of branches by century
+=>mysql> select *,substr(date_beg,1,length(date_beg)-2) from (select a.author_name,a.author_country,p.publish_city,year(p.publish_start_date) as date_beg,p.branches from author a inner join publish p on a.publish_id=p.publish_id) as a;
++----------------------+----------------+--------------+----------+----------+---------------------------------------+
+| author_name          | author_country | publish_city | date_beg | branches | substr(date_beg,1,length(date_beg)-2) |
++----------------------+----------------+--------------+----------+----------+---------------------------------------+
+| WILLIAM NORTON       | UK             | BERLIN       |     1929 |       10 | 19                                    |
+| C. J. WILDE          | USA            | NEW JERSEY   |     2008 |        9 | 20                                    |
+| JOHN BETJEMAN HUNTER | RUSSIA         | BERLIN       |     1929 |       10 | 19                                    |
+| JOHN BETJEMAN HUNTER | CANADA         | LONDON       |     2018 |       11 | 20                                    |
+| S.B.SWAMINATHAN      | INDIA          | BERLIN       |     1929 |       10 | 19                                    |
+| BUTLER ANDRE         | UK             | LONDON       |     2018 |       11 | 20                                    |
+| E. HOWARD            | EUROPE         | LONDON       |     2018 |       11 | 20                                    |
+| ANDREW JEFF          | GERMANY        | CANADA       |     2019 |       25 | 20                                    |
+| DREK TAILOR          | AUSTRALIA      | BERLIN       |     1929 |       10 | 19                                    |
+| MARY COFFING         | USA            | NEW JERSEY   |     2008 |        9 | 20                                    |
++----------------------+----------------+--------------+----------+----------+---------------------------------------+
+10 rows in set (0.00 sec)
+
+ select *,max(branches),substr(date_beg,1,length(date_beg)-2) as t from (select a.author_name,a.author_country,p.publish_city,year(p.publish_start_date) as date_beg,p.branches from author a inner join publish p on a.publish_id=p.publish_id) as a group by t;
++----------------+----------------+--------------+----------+----------+---------------+------+
+| author_name    | author_country | publish_city | date_beg | branches | max(branches) | t    |
++----------------+----------------+--------------+----------+----------+---------------+------+
+| WILLIAM NORTON | UK             | BERLIN       |     1929 |       10 |            10 | 19   |
+| C. J. WILDE    | USA            | NEW JERSEY   |     2008 |        9 |            25 | 20   |
++----------------+----------------+--------------+----------+----------+---------------+------+
+2 rows in set (0.01 sec)
+
+5.Fetch authors who do not have publisher from their country
+ select a.* from author a join publish p on a.publish_id=p.publish_id group by p.publish_id,p.publish_city having a.author_country!=p.publish_city;
++-----------+----------------------+----------------+--------------+------------+
+| author_id | author_name          | author_country | author_city  | publish_id |
++-----------+----------------------+----------------+--------------+------------+
+| AUT001    | WILLIAM NORTON       | UK             | CAMBRIDGE    | PB01       |
+| AUT002    | C. J. WILDE          | USA            | SAN FRANSICO | PB04       |
+| AUT004    | JOHN BETJEMAN HUNTER | CANADA         | TORONTO      | PB03       |
+| AUT008    | ANDREW JEFF          | GERMANY        | BERLIN       | PB02       |
++-----------+----------------------+----------------+--------------+------------+
+4 rows in set (0.00 sec)
+
+6. Fetch author details if first character of publisher name is same as author_name
+mysql> select author_id,author_name,author_country,author_city,publish_id 
+from 
+(select a.author_id,a.author_name,a.author_country,a.author_city,a.publish_id,
+substr(a.author_name,1,length(a.author_name)-length(a.author_name)+1)as auth_name,
+substr(p.publish_name,1,length(p.publish_name)-length(p.publish_name)+1) as pub_name
+ from author a inner join publish p 
+on a.publish_id=p.publish_id) 
+t where auth_name=pub_name;
++-----------+----------------------+----------------+-------------+------------+
+| author_id | author_name          | author_country | author_city | publish_id |
++-----------+----------------------+----------------+-------------+------------+
+| AUT003    | JOHN BETJEMAN HUNTER | RUSSIA         | MOSCOW      | PB01       |
+| AUT010    | MARY COFFING         | USA            | NEW JERSEY  | PB04       |
++-----------+----------------------+----------------+-------------+------------+
+2 rows in set (0.00 sec)
+
+=>select a.* from author a join publish p on substr(a.author_name,1,1)=
+    ->      substr(p.publish_name,1,1);
++-----------+----------------------+----------------+-------------+------------+
+| author_id | author_name          | author_country | author_city | publish_id |
++-----------+----------------------+----------------+-------------+------------+
+| AUT003    | JOHN BETJEMAN HUNTER | RUSSIA         | MOSCOW      | PB01       |
+| AUT004    | JOHN BETJEMAN HUNTER | CANADA         | TORONTO     | PB03       |
+| AUT005    | S.B.SWAMINATHAN      | INDIA          | DELHI       | PB01       |
+| AUT010    | MARY COFFING         | USA            | NEW JERSEY  | PB04       |
++-----------+----------------------+----------------+-------------+------------+
+4 rows in set (0.06 sec)
+
+
+7. Fetch author details who have more than one initial before their name
+=>mysql> select * from (select *,length(author_name)-length(replace(author_name,'.',"")) as name from author) t where name>1;
++-----------+-----------------+----------------+--------------+------------+------+
+| author_id | author_name     | author_country | author_city  | publish_id | name |
++-----------+-----------------+----------------+--------------+------------+------+
+| AUT002    | C. J. WILDE     | USA            | SAN FRANSICO | PB04       |    2 |
+| AUT005    | S.B.SWAMINATHAN | INDIA          | DELHI        | PB01       |    2 |
++-----------+-----------------+----------------+--------------+------------+------+
+2 rows in set (0.00 sec)
+  ///The first LEN function gives the length of the original string which is 9.
+   The REPLACE function replaces the commas with nothing giving the string “abcde”. 
+ The second LEN function gives the length of the ‘replaced’ string, which is 5. 
+ Then we subtract 5 from 9 giving 4; the number of commas in the string.
+
+select * from author where instr(author_name,'.')>0;
++-----------+-----------------+----------------+--------------+------------+
+| author_id | author_name     | author_country | author_city  | publish_id |
++-----------+-----------------+----------------+--------------+------------+
+| AUT002    | C. J. WILDE     | USA            | SAN FRANSICO | PB04       |
+| AUT005    | S.B.SWAMINATHAN | INDIA          | DELHI        | PB01       |
+| AUT007    | E. HOWARD       | EUROPE         | BERLIN       | PB03       |
++-----------+-----------------+----------------+--------------+------------+
+3 rows in set (0.65 sec)
+
+
+
+8. Fetch author details who do not have initial in their name
+=>mysql> select * from (select *,length(author_name)-length(replace(author_name,'.',"")) as name from author) t where name<1;
++-----------+----------------------+----------------+-------------+------------+------+
+| author_id | author_name          | author_country | author_city | publish_id | name |
++-----------+----------------------+----------------+-------------+------------+------+
+| AUT001    | WILLIAM NORTON       | UK             | CAMBRIDGE   | PB01       |    0 |
+| AUT003    | JOHN BETJEMAN HUNTER | RUSSIA         | MOSCOW      | PB01       |    0 |
+| AUT004    | JOHN BETJEMAN HUNTER | CANADA         | TORONTO     | PB03       |    0 |
+| AUT006    | BUTLER ANDRE         | UK             | LONDON      | PB03       |    0 |
+| AUT008    | ANDREW JEFF          | GERMANY        | BERLIN      | PB02       |    0 |
+| AUT009    | DREK TAILOR          | AUSTRALIA      | MELBOURNE   | PB01       |    0 |
+| AUT010    | MARY COFFING         | USA            | NEW JERSEY  | PB04       |    0 |
++-----------+----------------------+----------------+-------------+------------+------+
+7 rows in set (0.00 sec)
+
+
+9. Fetch author details who have lower case in author_country
+=>mysql> select * from author  where binary(author_country) REGEXP '[a-z]';
++-----------+-------------+----------------+-------------+------------+
+| AUTHOR_ID | AUTHOR_NAME | AUTHOR_COUNTRY | AUTHOR_CITY | PUBLISH_ID |
++-----------+-------------+----------------+-------------+------------+
+| AUT009    | Drek Tailor | Australia      | Melbourne   | PB01       |
++-----------+-------------+----------------+-------------+------------+
+1 row in set (0.00 sec)
+
+
+10.Fetch author information and publisher information who have publisher with recent publish_start_date.
+=>mysql> select author_id,author_name,author_country,author_city,publish_id,recent_date from (select a.*,max(p.publish_start_date) as recent_date from publish p join author a on a.publish_id=p.publish_id)as t;
++-----------+----------------+----------------+-------------+------------+-------------+
+| author_id | author_name    | author_country | author_city | publish_id | recent_date |
++-----------+----------------+----------------+-------------+------------+-------------+
+| AUT001    | WILLIAM NORTON | UK             | CAMBRIDGE   | PB01       | 2019-08-31  |
++-----------+----------------+----------------+-------------+------------+-------------+
+1 row in set (0.00 sec)
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SET-2
+======
+
+select t1.trip_id, t2.trip_id, t2.trip_start_time-t1.trip_end_time as time
+from trip t1
+join trip t2 on (t2.trip_destination=t1.trip_source
+and t2.trip_end_time>t1.trip_start_time)
+where t1.trip_destination=?station_from
+and t2.arrival_station_id=?station_to
+order by time
+
+https://stackoverflow.com/questions/1673916/sql-query-for-retrieving-connecting-trains
+
+1. 
+=>mysql> select t1.trip_source,t1.trip_dest,t2.trip_dest,t3.trip_dest,(t1.trip_cost+t2.trip_cost+t3.trip_cost) cost from
+    -> trip t1 join trip t2 on t1.trip_dest=t2.trip_source
+    -> join trip t3 on t2.trip_dest=t3.trip_source where t1.trip_source='chn' and t3.trip_dest='ndl';
++-------------+-----------+-----------+-----------+-------+
+| trip_source | trip_dest | trip_dest | trip_dest | cost  |
++-------------+-----------+-----------+-----------+-------+
+| chn         | bgl       | mum       | ndl       | 14700 |
+| chn         | hyd       | bgl       | ndl       | 10700 |
++-------------+-----------+-----------+-----------+-------+
+2 rows in set (0.05 sec)
+
+mysql> select ts,td1,td2,td3,cost from(
+    ->  select ts,td1,td2,td3,cost,dense_rank() over (order by cost) ran from (select t1.trip_source ts,t1.trip_dest td1,t2.trip_dest td2,t3.trip_dest td3,(t1.trip_cost+t2.trip_cost+t3.trip_cost) cost from
+    -> trip t1 join trip t2 on t1.trip_dest=t2.trip_source
+    -> join trip t3 on t2.trip_dest=t3.trip_source where t1.trip_source='chn' and t3.trip_dest='ndl')cost)min where ran=1;
++------+------+------+------+-------+
+| ts   | td1  | td2  | td3  | cost  |
++------+------+------+------+-------+
+| chn  | hyd  | bgl  | ndl  | 10700 |
++------+------+------+------+-------+
+1 row in set (0.12 sec)
+
+
+
+
+
+
+          select ts,td1,td2,td3,time,dense_rank() over (order by time) ran 
+          from 
+	  (select t1.trip_source ts,t1.trip_dest td1,t2.trip_dest td2,t3.trip_dest td3,
+	  (abs(t1.trip_end_time-t1.trip_start_time)+abs(t2.trip_end_time-t2.trip_start_time)+abs(t3.trip_end_time-t3.trip_start_time)) 
+	  time from
+          trip t1 join trip t2 on t1.trip_dest=t2.trip_source
+          join trip t3 on t2.trip_dest=t3.trip_source where t1.trip_source='chn' 
+	  and t3.trip_dest='ndl')time;
+
+	   select * from 
+          (select ts,td1,td2,td3,time,dense_rank() over (order by time) ran 
+          from 
+	  (select ts,td1,td2,td3,addtime(addtime(tab1,tab2),tab3) as time from
+	  (select t1.trip_source ts,t1.trip_dest td1,t2.trip_dest td2,t3.trip_dest td3,
+	  
+	  case when t1.trip_end_time>t1.trip_start_time 
+	  then timediff(t1.trip_end_time,t1.trip_start_time) 
+	  else timediff('24:00:00',timediff(t1.trip_start_time,t1.trip_end_time)) 
+          end as tab1,
+
+	  case when t2.trip_end_time>t2.trip_start_time 
+	  then timediff(t2.trip_end_time,t2.trip_start_time) 
+	  else timediff('24:00:00',timediff(t2.trip_start_time,t2.trip_end_time)) 
+          end as tab2,
+
+	  case when t3.trip_end_time>t3.trip_start_time 
+	  then timediff(t3.trip_end_time,t3.trip_start_time) 
+	  else timediff('24:00:00',timediff(t3.trip_start_time,t3.trip_end_time)) 
+          end as tab3
+
+	  from
+          trip t1 join trip t2 on t1.trip_dest=t2.trip_source
+          join trip t3 on t2.trip_dest=t3.trip_source where t1.trip_source='chn' 
+	  and t3.trip_dest='ndl')time) as t) as ta  where ran=1;
+
+2.
+
+=>mysql> select ts,td1,td2,td3,time,dense_rank() over (order by time) ran
+    ->           from
+    ->   (select ts,td1,td2,td3,addtime(addtime(tab1,tab2),tab3) as time from
+    ->   (select t1.trip_source ts,t1.trip_dest td1,t2.trip_dest td2,t3.trip_dest td3,
+    ->
+    ->   case when t1.trip_end_time>t1.trip_start_time
+    ->   then timediff(t1.trip_end_time,t1.trip_start_time)
+    ->   else timediff('24:00:00',timediff(t1.trip_start_time,t1.trip_end_time))
+    ->           end as tab1,
+    ->
+    ->   case when t2.trip_end_time>t2.trip_start_time
+    ->   then timediff(t2.trip_end_time,t2.trip_start_time)
+    ->   else timediff('24:00:00',timediff(t2.trip_start_time,t2.trip_end_time))
+    ->           end as tab2,
+    ->
+    ->   case when t3.trip_end_time>t3.trip_start_time
+    ->   then timediff(t3.trip_end_time,t3.trip_start_time)
+    ->   else timediff('24:00:00',timediff(t3.trip_start_time,t3.trip_end_time))
+    ->           end as tab3
+    ->   from
+    ->           trip t1 join trip t2 on t1.trip_dest=t2.trip_source
+    ->           join trip t3 on t2.trip_dest=t3.trip_source where t1.trip_source='chn'
+    ->   and t3.trip_dest='ndl')time)t;
++------+------+------+------+----------+-----+
+| ts   | td1  | td2  | td3  | time     | ran |
++------+------+------+------+----------+-----+
+| chn  | hyd  | bgl  | ndl  | 05:00:00 |   1 |
+| chn  | bgl  | mum  | ndl  | 05:25:00 |   2 |
++------+------+------+------+----------+-----+
+2 rows in set (0.00 sec)
+
+
+mysql> select * from
+    ->           (select ts,td1,td2,td3,time,dense_rank() over (order by time) ran
+    ->           from
+    ->   (select ts,td1,td2,td3,addtime(addtime(tab1,tab2),tab3) as time from
+    ->   (select t1.trip_source ts,t1.trip_dest td1,t2.trip_dest td2,t3.trip_dest td3,
+    ->
+    ->   case when t1.trip_end_time>t1.trip_start_time
+    ->   then timediff(t1.trip_end_time,t1.trip_start_time)
+    ->   else timediff('24:00:00',timediff(t1.trip_start_time,t1.trip_end_time))
+    ->           end as tab1,
+    ->
+    ->   case when t2.trip_end_time>t2.trip_start_time
+    ->   then timediff(t2.trip_end_time,t2.trip_start_time)
+    ->   else timediff('24:00:00',timediff(t2.trip_start_time,t2.trip_end_time))
+    ->           end as tab2,
+    ->
+    ->   case when t3.trip_end_time>t3.trip_start_time
+    ->   then timediff(t3.trip_end_time,t3.trip_start_time)
+    ->   else timediff('24:00:00',timediff(t3.trip_start_time,t3.trip_end_time))
+    ->           end as tab3
+    ->
+    ->   from
+    ->           trip t1 join trip t2 on t1.trip_dest=t2.trip_source
+    ->           join trip t3 on t2.trip_dest=t3.trip_source where t1.trip_source='chn'
+    ->   and t3.trip_dest='ndl')time) as t) as ta  where ran=1;
++------+------+------+------+----------+-----+
+| ts   | td1  | td2  | td3  | time     | ran |
++------+------+------+------+----------+-----+
+| chn  | hyd  | bgl  | ndl  | 05:00:00 |   1 |
++------+------+------+------+----------+-----+
+1 row in set (0.00 sec)
+
+
+4)Fetch itinerary details from CHN to NDL which happens on same day
+select t1.trip_source ,t1.trip_dest as des1,t2.trip_dest as des2,t3.trip_dest as des3,
+    ->       t1.trip_start_time as starttime,t3.trip_end_time as endtime
+    ->
+    ->
+    ->       from trip t1 join trip t2
+    ->       on t1.trip_dest=t2.trip_source
+    ->       join trip t3
+    ->       on t2.trip_dest=t3.trip_source
+    ->       where t1.trip_source='chn' and t3.trip_dest='ndl'and timediff(t3.trip_end_time,t1.trip_start_time)>0;
++-------------+------+------+------+-----------+----------+
+| trip_source | des1 | des2 | des3 | starttime | endtime  |
++-------------+------+------+------+-----------+----------+
+| chn         | hyd  | bgl  | ndl  | 09:45:00  | 22:10:00 |
++-------------+------+------+------+-----------+----------+
+1 row in set (0.04 sec)
+
+9)Fetch trip details which have less travel time
+
+=>mysql> select * from
+    ->       (select *,dense_rank() over(order by timediff1) as num from
+    ->
+    ->
+    ->      (select trip_source,trip_dest,
+    ->
+    ->       case when trip_end_time>trip_start_time
+    ->       then timediff(trip_end_time,trip_start_time)
+    ->       else timediff('24:00:00',timediff(trip_start_time,trip_end_time))
+    ->       end as timediff1
+    ->
+    ->      from trip)as t ) as d where num=1;
++-------------+-----------+-----------+-----+
+| trip_source | trip_dest | timediff1 | num |
++-------------+-----------+-----------+-----+
+| bgl         | mum       | 01:00:00  |   1 |
++-------------+-----------+-----------+-----+
+1 row in set (0.01 sec)
+
+
+10)Fetch trip details which have high travel time and no dynamic pricing
+
+mysql> select * from
+    ->
+    ->       (select *,dense_rank() over(order by timediff1 desc) as num from
+    ->
+    ->       (select trip_source,trip_dest,dyn_fare,
+    ->
+    ->       case when trip_end_time>trip_start_time
+    ->       then timediff(trip_end_time,trip_start_time)
+    ->       else timediff('24:00:00',timediff(trip_start_time,trip_end_time))
+    ->       end as timediff1
+    ->
+    ->       from trip)as t ) as d where num=1 and dyn_fare='N';
++-------------+-----------+----------+-----------+-----+
+| trip_source | trip_dest | dyn_fare | timediff1 | num |
++-------------+-----------+----------+-----------+-----+
+| mum         | bgl       | N        | 03:25:00  |   1 |
++-------------+-----------+----------+-----------+-----+
+1 row in set (0.01 sec)
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------_-_-_-_-_- -_-_-_-_-_-_-_-_-_-_-  _-_--_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- _- _-
+
+
+
+
+insert into stats values(13,1,2010,57.4,0.31)
+
+insert into stats values(13,5,2010,91.7,5.15);
+insert into stats values(13,12,2010,12.6,8.34);
+insert into stats values(13,9,2010,100.3,10.34);
+insert into stats values(44,9,2010,27.2,3.45); 
+
+
+insert into stats values(44,2,2010,27.3,0.18);
+
+
+insert into stats values(44,6,2010,74.8,2.11);
+insert into stats values(66,3,2010,6.7,2.1);
+insert into stats values(66,7,2010,65.8,4.52);
+
+select * from stats;
++----------+-------+------+----------------+-----------+
+| stats_id | month | year | temp_farenheit | rain_inch |
++----------+-------+------+----------------+-----------+
+|       13 |     1 | 2010 |          57.40 |      0.31 |
+|       44 |     2 | 2010 |          27.30 |      0.18 |
+|       13 |     5 | 2010 |          91.70 |      5.15 |
+|       13 |    12 | 2010 |          12.60 |      8.34 |
+|       44 |     9 | 2010 |          27.20 |      3.45 |
+|       13 |     9 | 2010 |         100.30 |     10.34 |
+|       44 |     6 | 2010 |          74.80 |      2.11 |
+|       66 |     3 | 2010 |           6.70 |      2.10 |
+|       66 |     7 | 2010 |          65.80 |      4.52 |
++----------+-------+------+----------------+-----------+
+9 rows in set (0.00 sec)
+
+mysql> create table station(station_id int,city varchar(30),state varchar(30),lat_n int,long_w int);
+Query OK, 0 rows affected (1.04 sec)
+
+mysql> insert into station values(13,'Phoenix','AZ',33,112);
+Query OK, 1 row affected (0.27 sec)
+
+mysql> insert into station values(44,'Denver','CO',40,105);
+Query OK, 1 row affected (0.15 sec)
+
+mysql> insert into station values(66,'Caribou','ME',47,68);
+Query OK, 1 row affected (0.09 sec)
+
+mysql> select * from station;
++------------+---------+-------+-------+--------+
+| station_id | city    | state | lat_n | long_w |
++------------+---------+-------+-------+--------+
+|         13 | Phoenix | AZ    |    33 |    112 |
+|         44 | Denver  | CO    |    40 |    105 |
+|         66 | Caribou | ME    |    47 |     68 |
++------------+---------+-------+-------+--------+
+3 rows in set (0.00 sec)
+
+
+
