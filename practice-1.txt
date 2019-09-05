@@ -129,8 +129,8 @@ t where auth_name=pub_name;
 +-----------+-----------------+----------------+--------------+------------+------+
 2 rows in set (0.00 sec)
   ///The first LEN function gives the length of the original string which is 9.
-   The REPLACE function replaces the commas with nothing giving the string “abcde”. 
- The second LEN function gives the length of the ‘replaced’ string, which is 5. 
+   The REPLACE function replaces the commas with nothing giving the string Â“abcdeÂ”. 
+ The second LEN function gives the length of the Â‘replacedÂ’ string, which is 5. 
  Then we subtract 5 from 9 giving 4; the number of commas in the string.
 
 select * from author where instr(author_name,'.')>0;
@@ -449,4 +449,80 @@ mysql> select * from station;
 3 rows in set (0.00 sec)
 
 
+1. Fetch rows which have hottest month per city with highest
+=>mysql> select stats_id,month,year,temp_farenheit,rain_inch,dense_rank() over
+    -> (partition by stats_id order by temp_farenheit desc,rain_inch desc) ran from stats;
++----------+-------+------+----------------+-----------+-----+
+| stats_id | month | year | temp_farenheit | rain_inch | ran |
++----------+-------+------+----------------+-----------+-----+
+|       13 |     9 | 2010 |         100.30 |     10.34 |   1 |
+|       13 |     5 | 2010 |          91.70 |      5.15 |   2 |
+|       13 |     1 | 2010 |          57.40 |      0.31 |   3 |
+|       13 |    12 | 2010 |          12.60 |      8.34 |   4 |
+|       44 |     6 | 2010 |          74.80 |      2.11 |   1 |
+|       44 |     2 | 2010 |          27.30 |      0.18 |   2 |
+|       44 |     9 | 2010 |          27.20 |      3.45 |   3 |
+|       66 |     7 | 2010 |          65.80 |      4.52 |   1 |
+|       66 |     3 | 2010 |           6.70 |      2.10 |   2 |
++----------+-------+------+----------------+-----------+-----+
+9 rows in set (0.00 sec)
 
+mysql> select stats_id,city,state,month,year,temp_farenheit,rain_inch from station s join
+    -> (select stats_id,month,year,temp_farenheit,rain_inch,dense_rank() over
+    -> (partition by stats_id order by temp_farenheit desc,rain_inch desc) ran from stats)temprain on s.station_id=temprain.stats_id where ran=1;
++----------+---------+-------+-------+------+----------------+-----------+
+| stats_id | city    | state | month | year | temp_farenheit | rain_inch |
++----------+---------+-------+-------+------+----------------+-----------+
+|       13 | Phoenix | AZ    |     9 | 2010 |         100.30 |     10.34 |
+|       44 | Denver  | CO    |     6 | 2010 |          74.80 |      2.11 |
+|       66 | Caribou | ME    |     7 | 2010 |          65.80 |      4.52 |
++----------+---------+-------+-------+------+----------------+-----------+
+3 rows in set (0.00 sec)
+
+
+2. Fetch and display rows with Station_ID, City, State, Month, Year and temp(in Celcius), rainfall (in cm)
+=>mysql> select s.station_id,s.city,s.state,st.month,st.year,((st.temp_farenheit-32)*(5/9)) as in_Celcius,(st.rain_inch*03937) as in_cm from station s join stats st on st.stats_id=s.station_id;
++------------+---------+-------+-------+------+------------+----------+
+| station_id | city    | state | month | year | in_Celcius | in_cm    |
++------------+---------+-------+-------+------+------------+----------+
+|         13 | Phoenix | AZ    |     1 | 2010 |  14.111111 |  1220.47 |
+|         44 | Denver  | CO    |     2 | 2010 |  -2.611111 |   708.66 |
+|         13 | Phoenix | AZ    |     5 | 2010 |  33.166667 | 20275.55 |
+|         13 | Phoenix | AZ    |    12 | 2010 | -10.777778 | 32834.58 |
+|         44 | Denver  | CO    |     9 | 2010 |  -2.666667 | 13582.65 |
+|         13 | Phoenix | AZ    |     9 | 2010 |  37.944444 | 40708.58 |
+|         44 | Denver  | CO    |     6 | 2010 |  23.777778 |  8307.07 |
+|         66 | Caribou | ME    |     3 | 2010 | -14.055556 |  8267.70 |
+|         66 | Caribou | ME    |     7 | 2010 |  18.777778 | 17795.24 |
++------------+---------+-------+-------+------+------------+----------+
+9 rows in set (0.00 sec)
+
+
+4.Which state has coldest month and highest rainfall compared to average per year
+=>mysql> select * from (
+    ->      select *,avg(rain_inch) over (partition by stats_id) avgrain,dense_rank() over (partition by stats_id order by temp_farenheit) ran from stats) avgr
+    ->      where rain_inch>avgrain and ran=1
+    -> ;
++----------+-------+------+----------------+-----------+----------+-----+
+| stats_id | month | year | temp_farenheit | rain_inch | avgrain  | ran |
++----------+-------+------+----------------+-----------+----------+-----+
+|       13 |    12 | 2010 |          12.60 |      8.34 | 6.035000 |   1 |
+|       44 |     9 | 2010 |          27.20 |      3.45 | 1.913333 |   1 |
++----------+-------+------+----------------+-----------+----------+-----+
+2 rows in set (0.02 sec)
+
+mysql> select *,avg(rain_inch) over (partition by stats_id) avgrain,dense_rank() over (partition by stats_id order by temp_farenheit) ran from stats;
++----------+-------+------+----------------+-----------+----------+-----+
+| stats_id | month | year | temp_farenheit | rain_inch | avgrain  | ran |
++----------+-------+------+----------------+-----------+----------+-----+
+|       13 |    12 | 2010 |          12.60 |      8.34 | 6.035000 |   1 |
+|       13 |     1 | 2010 |          57.40 |      0.31 | 6.035000 |   2 |
+|       13 |     5 | 2010 |          91.70 |      5.15 | 6.035000 |   3 |
+|       13 |     9 | 2010 |         100.30 |     10.34 | 6.035000 |   4 |
+|       44 |     9 | 2010 |          27.20 |      3.45 | 1.913333 |   1 |
+|       44 |     2 | 2010 |          27.30 |      0.18 | 1.913333 |   2 |
+|       44 |     6 | 2010 |          74.80 |      2.11 | 1.913333 |   3 |
+|       66 |     3 | 2010 |           6.70 |      2.10 | 3.310000 |   1 |
+|       66 |     7 | 2010 |          65.80 |      4.52 | 3.310000 |   2 |
++----------+-------+------+----------------+-----------+----------+-----+
+9 rows in set (0.00 sec)
