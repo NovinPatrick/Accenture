@@ -579,3 +579,13 @@ mysql> select distinct station_id,city,state,LAT_N,LONG_W from stats join statio
 +------------+---------+-------+-------+--------+
 3 rows in set (0.14 sec)
 
+
+10. Display state information and number of times when rainfall is greater than national average
+=>mysql> select distinct stats_id,state,c as rainfall_count from station join (select *,sum(case when c=3 then 1 else 1 end) over(partition by c) as e from (select *,count(rain_inch) over(partition by stats_id) as c from (select *,avg(rain_inch) over (partition by year) avgrain from stats) t where rain_inch>avgrain)s)y on station.station_id=y.stats_id;
++----------+-------+----------------+
+| stats_id | state | rainfall_count |
++----------+-------+----------------+
+|       13 | AZ    |              3 |
+|       66 | ME    |              1 |
++----------+-------+----------------+
+2 rows in set (0.00 sec)
