@@ -193,7 +193,6 @@ where t1.trip_destination=?station_from
 and t2.arrival_station_id=?station_to
 order by time
 
-https://stackoverflow.com/questions/1673916/sql-query-for-retrieving-connecting-trains
 
 1. 
 =>mysql> select t1.trip_source,t1.trip_dest,t2.trip_dest,t3.trip_dest,(t1.trip_cost+t2.trip_cost+t3.trip_cost) cost from
