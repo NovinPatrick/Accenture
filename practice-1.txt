@@ -390,8 +390,9 @@ mysql> select * from
 
 
 
------------------------------------------------------------------------------------------------------------------------------------------------------------_-_-_-_-_- -_-_-_-_-_-_-_-_-_-_-  _-_--_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- _- _-
-
+----------------------------------------------------------------------------------------------------------------------------------------
+SET-3
+=====
 
 
 
@@ -526,3 +527,55 @@ mysql> select *,avg(rain_inch) over (partition by stats_id) avgrain,dense_rank()
 |       66 |     7 | 2010 |          65.80 |      4.52 | 3.310000 |   2 |
 +----------+-------+------+----------------+-----------+----------+-----+
 9 rows in set (0.00 sec)
+
+5. Which city had maximum rainfall below average . Display city, state, rainfall, average information
+=>mysql> select *,dense_rank() over (order by rain_inch desc) ran from  (
+    -> select *,avg(rain_inch) over (partition by year) avgrain from stats
+    -> ) st  where rain_inch<avgrain;
++----------+-------+------+----------------+-----------+----------+-----+
+| stats_id | month | year | temp_farenheit | rain_inch | avgrain  | ran |
++----------+-------+------+----------------+-----------+----------+-----+
+|       44 |     9 | 2010 |          27.20 |      3.45 | 4.055556 |   1 |
+|       44 |     6 | 2010 |          74.80 |      2.11 | 4.055556 |   2 |
+|       66 |     3 | 2010 |           6.70 |      2.10 | 4.055556 |   3 |
+|       13 |     1 | 2010 |          57.40 |      0.31 | 4.055556 |   4 |
+|       44 |     2 | 2010 |          27.30 |      0.18 | 4.055556 |   5 |
++----------+-------+------+----------------+-----------+----------+-----+
+5 rows in set (0.00 sec)
+
+mysql> select city,state,rain_inch,avgrain from station s join (
+    -> select *,dense_rank() over (order by rain_inch desc) ran from  (
+    -> select *,avg(rain_inch) over (partition by year) avgrain from stats
+    ->      ) st  where rain_inch<avgrain )rain on s.station_id=rain.stats_id where ran=1;
++--------+-------+-----------+----------+
+| city   | state | rain_inch | avgrain  |
++--------+-------+-----------+----------+
+| Denver | CO    |      3.45 | 4.055556 |
++--------+-------+-----------+----------+
+1 row in set (0.00 sec)
+
+
+
+6.Which city had second  coldest month when compared to national average
+=>mysql> select * from(select s.station_id,s.city,s.state,temp.temp_farenheit from station s join (select *,avg(temp_farenheit) over (partition by stats_id) avgtemp,dense_rank() over (partition by stats_id order by temp_farenheit) ran from stats)temp on s.station_id=temp.stats_id where avgtemp>temp_farenheit and ran=2)city;
++------------+---------+-------+----------------+
+| station_id | city    | state | temp_farenheit |
++------------+---------+-------+----------------+
+|         13 | Phoenix | AZ    |          57.40 |
+|         44 | Denver  | CO    |          27.30 |
++------------+---------+-------+----------------+
+2 rows in set (0.00 sec)
+
+
+9. Report stations which obsevered temperatures less than 0(in celcius)
+mysql> select distinct station_id,city,state,LAT_N,LONG_W from stats join station on stats_id=station_id
+    -> where format(((temp_farenheit-32)*5/9),2)<0;
++------------+---------+-------+-------+--------+
+| station_id | city    | state | LAT_N | LONG_W |
++------------+---------+-------+-------+--------+
+|         44 | Denver  | CO    |    40 |    105 |
+|         13 | Phoenix | AZ    |    33 |    112 |
+|         66 | Caribou | ME    |    47 |     68 |
++------------+---------+-------+-------+--------+
+3 rows in set (0.14 sec)
+
